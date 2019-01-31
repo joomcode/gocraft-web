@@ -111,6 +111,10 @@ func NewWithPrefix(ctx interface{}, pathPrefix string) *Router {
 	return r
 }
 
+func (r *Router) PathPrefix() string {
+    return r.pathPrefix
+}
+
 // Subrouter attaches a new subrouter to the specified router and returns it.
 // You can use the same context or pass a new one. If you pass a new one, it must
 // embed a pointer to the previous context in the first slot. You can also pass
