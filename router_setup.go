@@ -112,7 +112,7 @@ func NewWithPrefix(ctx interface{}, pathPrefix string) *Router {
 }
 
 func (r *Router) PathPrefix() string {
-    return r.pathPrefix
+	return r.pathPrefix
 }
 
 // Subrouter attaches a new subrouter to the specified router and returns it.
