@@ -189,6 +189,18 @@ func calculateRoute(rootRouter *Router, req *Request) (*route, map[string]string
 	return leaf.route, wildcardMap
 }
 
+func CalculateRoutePath(rootRouter *Router, method, path string) string {
+	tree, ok := rootRouter.root[httpMethod(method)]
+	if !ok {
+		panic("unknown method: %s" + method)
+	}
+	leaf, _ := tree.Match(path)
+	if leaf == nil {
+		return ""
+	}
+	return leaf.route.Path
+}
+
 // given the route (and target router), return [root router, child router, ..., leaf route's router]
 // Use the memory in routers to store this information
 func routersFor(route *route, routers []*Router) []*Router {
