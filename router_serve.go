@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"runtime"
 )
@@ -166,24 +167,47 @@ func (mw *middlewareHandler) invoke(ctx reflect.Value, rw ResponseWriter, req *R
 // }
 
 func calculateRoute(rootRouter *Router, req *Request) (*route, map[string]string) {
+	isRawPath := req.URL.RawPath != ""
+	path := req.URL.Path
+	if isRawPath {
+		// Here is comment for url.URL:
+		// Note that the Path field is stored in decoded form: /%47%6f%2f becomes /Go/.
+		// A consequence is that it is impossible to tell which slashes in the Path were
+		// slashes in the raw URL and which were %2f. This distinction is rarely important,
+		// but when it is, the code should use RawPath, an optional field which only gets
+		// set if the default encoding is different from Path.
+		//
+		// So, using this RawPath will require manual unescaping after tree matching
+		path = req.URL.RawPath
+	}
+
 	var leaf *pathLeaf
 	var wildcardMap map[string]string
 	method := httpMethod(req.Method)
 	tree, ok := rootRouter.root[method]
 	if ok {
-		leaf, wildcardMap = tree.Match(req.URL.Path)
+		leaf, wildcardMap = tree.Match(path)
 	}
 
 	// If no match and this is a HEAD, route on GET.
 	if leaf == nil && method == httpMethodHead {
 		tree, ok := rootRouter.root[httpMethodGet]
 		if ok {
-			leaf, wildcardMap = tree.Match(req.URL.Path)
+			leaf, wildcardMap = tree.Match(path)
 		}
 	}
 
 	if leaf == nil {
 		return nil, nil
+	}
+
+	if isRawPath {
+		// Unescape wildcard values since RawPath used
+		for key, value := range wildcardMap {
+			if unescapedValue, err := url.QueryUnescape(value); err == nil {
+				wildcardMap[key] = unescapedValue
+			}
+		}
 	}
 
 	return leaf.route, wildcardMap
