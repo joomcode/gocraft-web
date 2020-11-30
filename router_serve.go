@@ -202,7 +202,7 @@ func calculateRoute(rootRouter *Router, req *Request) (*route, map[string]string
 	}
 
 	if isRawPath {
-		// Unescape wildcard values since RawPath used
+		// Unescape wildcard values since RawPath was used
 		for key, value := range wildcardMap {
 			if unescapedValue, err := url.QueryUnescape(value); err == nil {
 				wildcardMap[key] = unescapedValue
