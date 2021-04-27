@@ -2,6 +2,7 @@ package web
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -113,6 +114,34 @@ func NewWithPrefix(ctx interface{}, pathPrefix string) *Router {
 
 func (r *Router) PathPrefix() string {
 	return r.pathPrefix
+}
+
+func (r *Router) AllFullRoutes() []string {
+	if r.parent != nil {
+		panic("You can only call AllFullRoutes() on the root router.")
+	}
+
+	var allRoutes []string
+	var traverse func(router *Router)
+	traverse = func(router *Router) {
+		for _, route := range router.routes {
+			allRoutes = append(allRoutes, route.Path)
+		}
+		for _, child := range router.children {
+			traverse(child)
+		}
+	}
+	traverse(r)
+
+	sort.Strings(allRoutes)
+
+	uniqueAllRoutes := allRoutes[:0]
+	for i, r := range allRoutes {
+		if i == 0 || r != allRoutes[i-1] {
+			uniqueAllRoutes = append(uniqueAllRoutes, r)
+		}
+	}
+	return uniqueAllRoutes
 }
 
 // Subrouter attaches a new subrouter to the specified router and returns it.

@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //
@@ -345,6 +347,27 @@ func TestRouteVerbs(t *testing.T) {
 			t.Error("Test:", method, " Didn't get Body=", method, ". Got Body=", body)
 		}
 	}
+}
+
+func TestAllFullRoutes(t *testing.T) {
+	router := New(Context{})
+	router.Post("/b", func(w ResponseWriter, r *Request) {
+	})
+	router.Delete("/c", func(w ResponseWriter, r *Request) {
+	})
+	router.Post("/d", func(w ResponseWriter, r *Request) {
+	})
+	router.Subrouter(Context{}, "/d").Post("/d", func(w ResponseWriter, r *Request) {
+	})
+	router.Get("/a", func(w ResponseWriter, r *Request) {
+	})
+	router.Post("/a", func(w ResponseWriter, r *Request) {
+	})
+
+	assert.Panics(t, func() {
+		router.Subrouter(Context{}, "/e").AllFullRoutes()
+	})
+	assert.Equal(t, []string{"/a", "/b", "/c", "/d", "/d/d"}, router.AllFullRoutes())
 }
 
 func TestRouteHead(t *testing.T) {
