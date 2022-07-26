@@ -371,8 +371,10 @@ func isValidHandler(vfn reflect.Value, ctxType reflect.Type, types ...reflect.Ty
 	} else if numIn == (typesLen + 1) {
 		// context, types
 		firstArgType := fnType.In(0)
-		if firstArgType != reflect.PtrTo(ctxType) && firstArgType != emptyInterfaceType {
-			return false
+		if firstArgType != reflect.PtrTo(ctxType) {
+			if !reflect.PtrTo(ctxType).AssignableTo(firstArgType) {
+				return false
+			}
 		}
 		typesStartIdx = 1
 	} else {
@@ -417,7 +419,8 @@ func instructiveMessage(vfn reflect.Value, addingType string, yourType string, a
 	str += "*\n"
 	str += "* // If you want your " + yourType + " to accept a context:\n"
 	str += "* func (c *" + ctxString + ") YourFunctionName(" + args + ")  // or,\n"
-	str += "* func YourFunctionName(c *" + ctxString + ", " + args + ")\n"
+	str += "* func YourFunctionName(c *" + ctxString + ", " + args + ") // or,\n"
+	str += "* func YourFunctionName(c InterfaceImplementedByContext, " + args + ")\n"
 	str += "*\n"
 	str += "* Unfortunately, your function has this signature: " + vfn.Type().String() + "\n"
 	str += "*\n"
