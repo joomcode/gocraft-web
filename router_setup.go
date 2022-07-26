@@ -371,10 +371,8 @@ func isValidHandler(vfn reflect.Value, ctxType reflect.Type, types ...reflect.Ty
 	} else if numIn == (typesLen + 1) {
 		// context, types
 		firstArgType := fnType.In(0)
-		if firstArgType != reflect.PtrTo(ctxType) {
-			if !reflect.PtrTo(ctxType).AssignableTo(firstArgType) {
-				return false
-			}
+		if ctxPtrType := reflect.PtrTo(ctxType); firstArgType != ctxPtrType && !ctxPtrType.AssignableTo(firstArgType) {
+			return false
 		}
 		typesStartIdx = 1
 	} else {
