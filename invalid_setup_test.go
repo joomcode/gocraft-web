@@ -1,8 +1,9 @@
 package web
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func (c *Context) InvalidHandler()                                     {}
@@ -16,6 +17,16 @@ func (c *invalidSubcontext) Handler(w ResponseWriter, r *Request) {}
 type invalidSubcontext2 struct {
 	*invalidSubcontext
 }
+
+type contextInterface interface {
+	SignalMethod()
+}
+
+type interfaceImplementingContext struct{}
+
+var _ contextInterface = (*interfaceImplementingContext)(nil)
+
+func (ctx interfaceImplementingContext) SignalMethod() {}
 
 func TestInvalidContext(t *testing.T) {
 	assert.Panics(t, func() {
@@ -60,6 +71,22 @@ func TestInvalidHandler(t *testing.T) {
 	})
 
 	//
+}
+
+func TestPassContextByInterface(t *testing.T) {
+	router := New(interfaceImplementingContext{})
+
+	t.Run("TypesMatch", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			router.Get("/action", func(ctx *interfaceImplementingContext, w ResponseWriter, r *Request) {})
+		})
+	})
+
+	t.Run("BaseTypeMatchesInterface", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			router.Get("/action", func(ctx contextInterface, w ResponseWriter, r *Request) {})
+		})
+	})
 }
 
 func TestInvalidMiddleware(t *testing.T) {
