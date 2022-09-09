@@ -361,7 +361,8 @@ func validateMeasurementHandler(cb reflect.Value, ctxType reflect.Type) {
 	if !isValidHandler(cb, ctxType,
 		reflect.TypeOf(""),
 		reflect.TypeOf(Measure(0)),
-		reflect.TypeOf(time.Duration(0)),
+		reflect.TypeOf(time.Now()),
+		reflect.TypeOf(time.Now()),
 	) {
 		panic(instructiveMessage(cb, "a 'not found' handler", "not found handler", "rw web.ResponseWriter, req *web.Request", ctxType))
 	}

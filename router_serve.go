@@ -34,8 +34,8 @@ func (mc *middlewareClosure) finishMeasurement(measure Measure) string {
 		return ""
 	}
 
-	timeSpent := time.Now().Sub(mc.measurementStart)
-	if timeSpent <= mc.RootRouter.measureThreshold {
+	now := time.Now()
+	if now.Sub(mc.measurementStart) <= mc.RootRouter.measureThreshold {
 		return ""
 	}
 
@@ -50,7 +50,8 @@ func (mc *middlewareClosure) finishMeasurement(measure Measure) string {
 	invoke(mc.RootRouter.measureCallback, mc.Contexts[0], []reflect.Value{
 		reflect.ValueOf(middlewareName),
 		reflect.ValueOf(measure),
-		reflect.ValueOf(timeSpent),
+		reflect.ValueOf(mc.measurementStart),
+		reflect.ValueOf(now),
 	})
 	return middlewareName
 }

@@ -27,7 +27,7 @@ func TestMeasure(t *testing.T) {
 	router := New(measureContext{})
 
 	var measurements []measurement
-	router.MeasureMiddlewares(0, func(ctx *measureContext, name string, measure Measure, duration time.Duration) {
+	router.MeasureMiddlewares(0, func(ctx *measureContext, name string, measure Measure, start, end time.Time) {
 		measurements = append(measurements, measurement{
 			name:    name,
 			measure: measure,
@@ -62,7 +62,7 @@ func TestMeasureWithLargeThreshold(t *testing.T) {
 	router := New(measureContext{})
 
 	var measurements []measurement
-	router.MeasureMiddlewares(time.Hour, func(ctx *measureContext, name string, measure Measure, duration time.Duration) {
+	router.MeasureMiddlewares(time.Hour, func(ctx *measureContext, name string, measure Measure, start, end time.Time) {
 		measurements = append(measurements, measurement{
 			name:    name,
 			measure: measure,
