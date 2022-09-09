@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 )
 
 type httpMethod string
@@ -19,6 +20,13 @@ const (
 )
 
 var httpMethods = []httpMethod{httpMethodGet, httpMethodPost, httpMethodPut, httpMethodDelete, httpMethodPatch, httpMethodHead, httpMethodOptions}
+
+type Measure int
+
+const (
+	MeasureBefore Measure = iota
+	MeasureAfter
+)
 
 // Router implements net/http's Handler interface and is what you attach middleware, routes/handlers, and subrouters to.
 type Router struct {
@@ -46,6 +54,10 @@ type Router struct {
 	// This can only be set on the root handler, since by virtue of not finding a route, we don't have a target.
 	// (That being said, in the future we could investigate namespace matches)
 	notFoundHandler reflect.Value
+
+	// This can only be set on the root handler, since by virtue of not finding a route, we don't have a target.
+	measureCallback  reflect.Value
+	measureThreshold time.Duration
 
 	// This can only be set on the root handler, since by virtue of not finding a route, we don't have a target.
 	optionsHandler reflect.Value
@@ -204,6 +216,21 @@ func (r *Router) NotFound(fn interface{}) *Router {
 	return r
 }
 
+// MeasureMiddlewares sets the specified callback function to report time spent in middleware before and after call of next().
+// If threshold is not equal zero reports only measurements greater than specified threshold.
+// Expected callback should be in form: func(ctx ContextType, middlewareName string, measure Measure, duration time.Duration)
+// Note that only the root router can have a Measure callback.
+func (r *Router) MeasureMiddlewares(threshold time.Duration, callback interface{}) *Router {
+	if r.parent != nil {
+		panic("You can only set a MeasureMiddlewares on the root router.")
+	}
+	cb := reflect.ValueOf(callback)
+	validateMeasurementHandler(cb, r.contextType)
+	r.measureCallback = cb
+	r.measureThreshold = threshold
+	return r
+}
+
 // OptionsHandler sets the specified function as the options handler and returns the router.
 // Note that only the root router can have a OptionsHandler handler.
 func (r *Router) OptionsHandler(fn interface{}) *Router {
@@ -327,6 +354,16 @@ func validateNotFoundHandler(vfn reflect.Value, ctxType reflect.Type) {
 	var resp func() ResponseWriter
 	if !isValidHandler(vfn, ctxType, reflect.TypeOf(resp).Out(0), reflect.TypeOf(req)) {
 		panic(instructiveMessage(vfn, "a 'not found' handler", "not found handler", "rw web.ResponseWriter, req *web.Request", ctxType))
+	}
+}
+
+func validateMeasurementHandler(cb reflect.Value, ctxType reflect.Type) {
+	if !isValidHandler(cb, ctxType,
+		reflect.TypeOf(""),
+		reflect.TypeOf(Measure(0)),
+		reflect.TypeOf(time.Duration(0)),
+	) {
+		panic(instructiveMessage(cb, "a 'not found' handler", "not found handler", "rw web.ResponseWriter, req *web.Request", ctxType))
 	}
 }
 
