@@ -93,6 +93,10 @@ func (rootRouter *Router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // The action invoking middleware is executed after all middleware. It executes the final handler.
 func middlewareStack(closure *middlewareClosure) NextMiddlewareFunc {
 	closure.Next = func(rw ResponseWriter, req *Request) {
+		// Finish previous 'before' middleware measurement and capture current middleware name. This name will later
+		// be used to start 'after' measurement in deferred handler.
+		// Captured name is important because 'after' measurement is finished on the stack frame, where the call of this
+		// middleware already disappeared.
 		middlewareName := closure.finishMeasurement(MeasureBefore)
 		defer closure.startMeasurement(middlewareName)
 
