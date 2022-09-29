@@ -128,6 +128,14 @@ func (r *Router) PathPrefix() string {
 	return r.pathPrefix
 }
 
+func (r *Router) RootRouter() *Router {
+	result := r
+	for result.parent != nil {
+		result = result.parent
+	}
+	return result
+}
+
 func (r *Router) AllFullRoutes() []string {
 	if r.parent != nil {
 		panic("You can only call AllFullRoutes() on the root router.")
