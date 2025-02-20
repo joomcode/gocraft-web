@@ -148,13 +148,7 @@ func (r *Router) AllFullRoutes() []string {
 
 	sort.Strings(allRoutes)
 
-	uniqueAllRoutes := allRoutes[:0]
-	for i, r := range allRoutes {
-		if i == 0 || r != allRoutes[i-1] {
-			uniqueAllRoutes = append(uniqueAllRoutes, r)
-		}
-	}
-	return uniqueAllRoutes
+	return compact(allRoutes)
 }
 
 func (r *Router) AllFullRoutesWithMethods() []string {
@@ -172,13 +166,7 @@ func (r *Router) AllFullRoutesWithMethods() []string {
 		return strings.SplitN(allRoutesWithMethods[i], " ", 2)[1] < strings.SplitN(allRoutesWithMethods[j], " ", 2)[1]
 	})
 
-	uniqueAllRoutes := allRoutesWithMethods[:0]
-	for i, r := range allRoutesWithMethods {
-		if i == 0 || r != allRoutesWithMethods[i-1] {
-			uniqueAllRoutes = append(uniqueAllRoutes, r)
-		}
-	}
-	return uniqueAllRoutes
+	return compact(allRoutesWithMethods)
 }
 
 // Subrouter attaches a new subrouter to the specified router and returns it.
@@ -505,4 +493,15 @@ func traverse(r *Router, process func(*route)) {
 	for _, child := range r.children {
 		traverse(child, process)
 	}
+}
+
+// Remove duplicates from a sorted slice of strings
+func compact(s []string) []string {
+	unique := s[:0]
+	for i, r := range s {
+		if i == 0 || r != s[i-1] {
+			unique = append(unique, r)
+		}
+	}
+	return unique
 }
