@@ -142,26 +142,31 @@ func (r *Router) AllFullRoutes() []string {
 	}
 
 	var allRoutes []string
-	var traverse func(router *Router)
-	traverse = func(router *Router) {
-		for _, route := range router.routes {
-			allRoutes = append(allRoutes, route.Path)
-		}
-		for _, child := range router.children {
-			traverse(child)
-		}
-	}
-	traverse(r)
+	traverse(r, func(route *route) {
+		allRoutes = append(allRoutes, route.Path)
+	})
 
 	sort.Strings(allRoutes)
 
-	uniqueAllRoutes := allRoutes[:0]
-	for i, r := range allRoutes {
-		if i == 0 || r != allRoutes[i-1] {
-			uniqueAllRoutes = append(uniqueAllRoutes, r)
-		}
+	return compact(allRoutes)
+}
+
+func (r *Router) AllFullRoutesWithMethods() []string {
+	if r.parent != nil {
+		panic("You can only call AllFullRoutesWithMethods() on the root router.")
 	}
-	return uniqueAllRoutes
+
+	var allRoutesWithMethods []string
+	traverse(r, func(route *route) {
+		allRoutesWithMethods = append(allRoutesWithMethods, string(route.Method)+" "+route.Path)
+	})
+
+	// Sort by path, ignoring method
+	sort.Slice(allRoutesWithMethods, func(i, j int) bool {
+		return strings.SplitN(allRoutesWithMethods[i], " ", 2)[1] < strings.SplitN(allRoutesWithMethods[j], " ", 2)[1]
+	})
+
+	return compact(allRoutesWithMethods)
 }
 
 // Subrouter attaches a new subrouter to the specified router and returns it.
@@ -478,4 +483,25 @@ func instructiveMessage(vfn reflect.Value, addingType string, yourType string, a
 // Returns a path without a trailing "/" unless the overall path is just "/"
 func appendPath(rootPath, childPath string) string {
 	return strings.TrimRight(rootPath, "/") + "/" + strings.TrimLeft(childPath, "/")
+}
+
+// Traverse the router tree and call the process function on each route
+func traverse(r *Router, process func(*route)) {
+	for _, route := range r.routes {
+		process(route)
+	}
+	for _, child := range r.children {
+		traverse(child, process)
+	}
+}
+
+// Remove duplicates from a sorted slice of strings
+func compact(s []string) []string {
+	unique := s[:0]
+	for i, r := range s {
+		if i == 0 || r != s[i-1] {
+			unique = append(unique, r)
+		}
+	}
+	return unique
 }
