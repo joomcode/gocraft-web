@@ -381,13 +381,13 @@ func TestAllFullRoutesWithMethods(t *testing.T) {
 	router.Options("/g", func(w ResponseWriter, r *Request) {})
 
 	expectedRoutes := []string{
-		"/a GET",
-		"/b POST",
-		"/c PUT",
-		"/d DELETE",
-		"/e PATCH",
-		"/f HEAD",
-		"/g OPTIONS",
+		"GET /a",
+		"POST /b",
+		"PUT /c",
+		"DELETE /d",
+		"PATCH /e",
+		"HEAD /f",
+		"OPTIONS /g",
 	}
 
 	assert.Equal(t, expectedRoutes, router.AllFullRoutesWithMethods())
@@ -400,8 +400,8 @@ func TestAllFullRoutesWithMethods_Subrouter(t *testing.T) {
 	subrouter.Post("/b", func(w ResponseWriter, r *Request) {})
 
 	expectedRoutes := []string{
-		"/sub/a GET",
-		"/sub/b POST",
+		"GET /sub/a",
+		"POST /sub/b",
 	}
 
 	assert.Equal(t, expectedRoutes, router.AllFullRoutesWithMethods())
@@ -413,7 +413,7 @@ func TestAllFullRoutesWithMethods_DuplicateRoutes(t *testing.T) {
 	router.Get("/a", func(w ResponseWriter, r *Request) {})
 
 	expectedRoutes := []string{
-		"/a GET",
+		"GET /a",
 	}
 
 	assert.Equal(t, expectedRoutes, router.AllFullRoutesWithMethods())
