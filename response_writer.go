@@ -74,3 +74,8 @@ func (w *appResponseWriter) Flush() {
 		flusher.Flush()
 	}
 }
+
+// Unwrap returns underlying http.ResponseWrapper. http.ResponseController uses it.
+func (w *appResponseWriter) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
+}
